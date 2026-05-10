@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Skills Masterclass</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* Custom scrollbar and animations */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .pie-chart {
+            background: conic-gradient(
+                #f87171 0deg 90deg,
+                #60a5fa 90deg 210deg,
+                #fbbf24 210deg 300deg,
+                #34d399 300deg 360deg
+            );
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- UI COMPONENTS ---
+        const Card = ({ children, className = "" }) => (
+            <div className={`bg-white p-6 rounded-2xl shadow-sm border border-slate-100 ${className}`}>
+                {children}
+            </div>
+        );
+
+        const Button = ({ children, onClick, variant = "primary", className = "", disabled=false }) => {
+            const baseStyle = "px-5 py-2.5 rounded-xl font-medium transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
+            const variants = {
+                primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm",
+                secondary: "bg-slate-100 text-slate-700 hover:bg-slate-200",
+                outline: "border-2 border-indigo-100 text-indigo-600 hover:bg-indigo-50"
+            };
+            return (
+                <button disabled={disabled} onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`}>
+                    {children}
+                </button>
+            );
+        };
+
+        const IconCheck = () => <svg className="w-5 h-5 inline-block text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>;
+        const IconAlert = () => <svg className="w-5 h-5 inline-block text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>;
+
+        // --- PAGE 1: DATA CLEANING ---
+        const Page1 = () => {
+            const [q1Answer, setQ1Answer] = useState(null);
+            const [showBrainstorm, setShowBrainstorm] = useState(false);
+
+            return (
+                <div className="space-y-8 fade-in w-full max-w-4xl mx-auto">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">1. Data Cleaning</h1>
+                        <p className="text-slate-600 text-lg">Garbage In, Garbage Out.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <Card>
+                            <h2 className="text-xl font-bold text-slate-800 mb-3">From Survey to Spreadsheet</h2>
+                            <p className="text-slate-600 mb-4">When people fill out forms, they make mistakes. If you analyze messy data, your insights will be wrong. This is known as <strong>"Garbage In, Garbage Out"</strong>.</p>
+                            <h3 className="font-semibold text-slate-800 mt-4 mb-2">Typical Basic Data Cleaning Steps:</h3>
+                            <ul className="list-disc pl-5 text-slate-600 space-y-1 mb-4">
+                                <li>Fixing inconsistent text (e.g., "Math", "math", "MATH")</li>
+                                <li>Removing duplicate submissions</li>
+                            </ul>
+                        </Card>
+
+                        <Card className="bg-indigo-50 border-indigo-100">
+                            <h2 className="text-xl font-bold text-indigo-900 mb-3">Designing for Data Integrity</h2>
+                            <p className="text-indigo-800 mb-4">The ultimate "superpower" solution is preventing messy data in the first place.</p>
+                            <ul className="list-disc pl-5 text-indigo-800 space-y-1">
+                                <li>Use <strong>closed questions</strong> (multiple choice) instead of open text boxes.</li>
+                                <li>Use <strong>Data Validation</strong> to force numbers, set boundaries, and limit checkboxes.</li>
+                            </ul>
+                        </Card>
+                    </div>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Activity: Spot the Garbage</h2>
+                        <p className="text-slate-600 mb-4">You ask students for their favorite subject using a blank text box. In your spreadsheet, you receive these exact responses: <strong>Math, math, MATH, Mathematics, science, Sci</strong>.</p>
+                        <p className="font-medium text-slate-800 mb-4">How many distinct values will the computer falsely read?</p>
+                        <div className="space-y-2">
+                            {[2, 3, 6].map(num => (
+                                <button 
+                                    key={num}
+                                    onClick={() => setQ1Answer(num)}
+                                    className={`w-full text-left p-3 rounded-lg border ${q1Answer === num ? (num === 6 ? 'bg-green-100 border-green-400' : 'bg-red-100 border-red-400') : 'hover:bg-slate-50 border-slate-200'}`}
+                                >
+                                    {num} Values
+                                </button>
+                            ))}
+                        </div>
+                        {q1Answer && (
+                            <div className={`mt-4 p-4 rounded-lg ${q1Answer === 6 ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                                {q1Answer === 6 ? <><IconCheck/> Correct! To a computer, upper/lowercase and abbreviations make them all unique. You actually only have 2 subjects, but the computer sees 6.</> : <><IconAlert/> Not quite. Remember, computers are literal. "Math" and "math" are seen as completely different things.</>}
+                            </div>
+                        )}
+                    </Card>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <Card>
+                            <h2 className="text-xl font-bold text-slate-800 mb-4">Tool: Find & Replace</h2>
+                            <p className="text-slate-600 mb-4">Watch this basic data cleaning tutorial using functions/features in Google Sheets such as 'Find and Replace'.</p>
+                            <div className="rounded-xl overflow-hidden aspect-video">
+                                <iframe className="w-full h-full" src="https://www.youtube.com/embed/pIblnnAtjmk?end=277" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                            </div>
+                        </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Activity: Anticipate the Mess</h2>
+                        <p className="text-slate-600 mb-4">Imagine a survey has a blank text box that just says <strong>"Age"</strong>. Brainstorm 3 ways users could ruin the data.</p>
+                        <textarea className="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none mb-3" rows="3" placeholder="Type your ideas here..."></textarea>
+                        <Button onClick={() => setShowBrainstorm(true)}>Reveal Common Answers</Button>
+                        {showBrainstorm && (
+                            <div className="mt-4 p-4 bg-indigo-50 rounded-lg text-indigo-800 fade-in">
+                                <strong>Common data destroyers:</strong>
+                                <ul className="list-disc pl-5 mt-2 space-y-1">
+                                    <li>Spelling it out: "Seventeen"</li>
+                                    <li>Adding text: "17 years old"</li>
+                                    <li>Fractions: "17 and a half"</li>
+                                    <li>Jokes/Errors: "old enough", "idk", "-5"</li>
+                                </ul>
+                            </div>
+                        )}
+                    </Card>
+
+                        <Card>
+                            <h2 className="text-xl font-bold text-slate-800 mb-4">Tool: Data Validation</h2>
+                            <p className="text-slate-600 mb-4">Watch how to use data validation in Google Forms to lock down your answers to prevent mess.</p>
+                            <div className="rounded-xl overflow-hidden aspect-video">
+                                <iframe className="w-full h-full" src="https://www.youtube.com/embed/hRsR22ipX5k?start=16" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                            </div>
+                        </Card>
+                    </div>
+
+                </div>
+            );
+        };
+
+        // --- PAGE 2: DATA ANALYSIS (BASIC) ---
+        const Page2 = () => {
+            const initialItems = [
+                { id: 1, text: "Age (Years)", type: "num" },
+                { id: 2, text: "Favorite Color", type: "cat" },
+                { id: 3, text: "Height (cm)", type: "num" },
+                { id: 4, text: "Student ID Number", type: "cat" }, // Trick!
+                { id: 5, text: "Number of Siblings", type: "num" },
+                { id: 6, text: "Letter Grade (A, B, C)", type: "cat" },
+                { id: 7, text: "Test Score (0-100)", type: "num" },
+                { id: 8, text: "Zip Code", type: "cat" }, // Trick!
+            ];
+
+            const [items, setItems] = useState(initialItems);
+            const [categorical, setCategorical] = useState([]);
+            const [numerical, setNumerical] = useState([]);
+            const [feedback, setFeedback] = useState("");
+
+            const handleSort = (item, destination) => {
+                if (item.type !== destination) {
+                    setFeedback(`Oops! "${item.text}" is actually ${item.type === 'cat' ? 'Categorical' : 'Numerical'}.`);
+                    return;
+                }
+                
+                setFeedback("");
+                setItems(items.filter(i => i.id !== item.id));
+                if (destination === 'cat') setCategorical([...categorical, item]);
+                if (destination === 'num') setNumerical([...numerical, item]);
+            };
+
+            return (
+                <div className="space-y-8 fade-in w-full max-w-4xl mx-auto">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">2. Basic Data Analysis</h1>
+                        <p className="text-slate-600 text-lg">The first step in analysing data is to summarise it. And how to summarise your data depends on the type of data you have - categorical or numerical data.</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-6">
+                        <Card className="border-l-4 border-l-blue-500">
+                            <h2 className="text-xl font-bold text-slate-800 mb-2">Categorical Data</h2>
+                            <p className="text-slate-600 mb-3">Qualitative data that groups information into categories (e.g., colors, brands, names).</p>
+                            <p className="font-medium text-slate-800">Summary Statistics:</p>
+                            <p className="text-slate-600">Counts or Percentages (e.g., 40% chose Red).</p>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-orange-500">
+                            <h2 className="text-xl font-bold text-slate-800 mb-2">Numerical Data</h2>
+                            <p className="text-slate-600 mb-3">Quantitative data representing measurable quantities (e.g., height, temperature).</p>
+                            <p className="font-medium text-slate-800">Summary Statistics:</p>
+                            <p className="text-slate-600">Averages (Mean), Medians, and Ranges.</p>
+                        </Card>
+                    </div>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-2">Activity: Sort the Variables</h2>
+                        <p className="text-slate-600 mb-4">Tap on the 'C' or 'N' next to each variable to assign it to the correct bucket ('C' for Categorical and 'N' for numerical). Watch out for trick questions!</p>
+                        
+                        {feedback && (
+                            <div className="mb-4 p-3 bg-amber-50 text-amber-800 rounded-lg border border-amber-200 fade-in">
+                                <IconAlert/> {feedback}
+                                {feedback.includes("ID Number") || feedback.includes("Zip Code") ? " (Just because it's made of numbers doesn't mean you can calculate an 'average' ID number!)" : ""}
+                            </div>
+                        )}
+
+                        {items.length > 0 ? (
+                            <div className="flex flex-wrap gap-2 mb-6 p-4 bg-slate-50 rounded-xl min-h-[80px]">
+                                {items.map(item => (
+                                    <div key={item.id} className="bg-white px-4 py-2 rounded-full border shadow-sm flex items-center gap-2 fade-in">
+                                        <span className="font-medium text-slate-700">{item.text}</span>
+                                        <button onClick={() => handleSort(item, 'cat')} className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm font-bold" title="Send to Categorical">C</button>
+                                        <button onClick={() => handleSort(item, 'num')} className="w-8 h-8 rounded-full bg-orange-100 text-orange-700 hover:bg-orange-200 text-sm font-bold" title="Send to Numerical">N</button>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="mb-6 p-4 bg-green-50 text-green-800 rounded-xl font-bold text-center border border-green-200 fade-in">
+                                <IconCheck/> All items sorted correctly!
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 min-h-[150px]">
+                                <h3 className="font-bold text-blue-900 mb-2 text-center">Categorical Bucket</h3>
+                                <div className="flex flex-col gap-2">
+                                    {categorical.map(item => (
+                                        <div key={item.id} className="bg-white px-3 py-1 rounded text-sm text-blue-800 shadow-sm fade-in">{item.text}</div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 min-h-[150px]">
+                                <h3 className="font-bold text-orange-900 mb-2 text-center">Numerical Bucket</h3>
+                                <div className="flex flex-col gap-2">
+                                    {numerical.map(item => (
+                                        <div key={item.id} className="bg-white px-3 py-1 rounded text-sm text-orange-800 shadow-sm fade-in">{item.text}</div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Summarizing Data with Pivot Tables</h2>
+                        <p className="text-slate-600 mb-4">Never count rows manually. Pivot tables are your best friend for instantly calculating categorical counts/percentages and numerical averages.</p>
+                        <div className="rounded-xl overflow-hidden aspect-video">
+                            <iframe className="w-full h-full" src="https://www.youtube.com/embed/80hfccFB7vs" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        // --- PAGE 3: DATA VISUALISATION ---
+        const Page3 = () => {
+            const [step, setStep] = useState(0);
+            const steps = [
+                "1. Default Pie Chart",
+                "2. Change to Bar Chart",
+                "3. Sort Largest to Smallest",
+                "4. Remove Clutter (Gridlines)",
+                "5. Add Clear Title",
+                "6. Add Data Labels",
+                "7. Purposeful Color"
+            ];
+
+            return (
+                <div className="space-y-8 fade-in w-full max-w-4xl mx-auto">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">3. Data Visualisation</h1>
+                        <p className="text-slate-600 text-lg">Communicating your Insights with Charts.</p>
+                    </div>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">General Principles</h2>
+                        <ul className="list-disc pl-5 text-slate-600 space-y-2 mb-4">
+                            <li><strong>Categorical Data:</strong> Use Column/Bar charts. Avoid Pie charts unless you have 2-3 categories that strictly sum to 100%. Just because Google Sheets defaults to a pie chart doesn't mean it's good!</li>
+                            <li><strong>Numerical Data:</strong> While <a href="https://www.youtube.com/watch?v=qBigTkBLU6g">histograms</a> and <a href="https://www.youtube.com/watch?v=KwqWuRvt7XQ">box plots</a> are the standard charts in statistics to summarise and visualise numerical data, the general audience may be too unfamiliar with them. Consider presenting numerical summaries as simple text or clear tables instead.</li>
+                            <li><strong>Good Design:</strong> Clear titles, labeled axes, decluttering, and purposeful use of color.</li>
+                        </ul>
+                    </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Activity: Chart Makeover</h2>
+                        <p className="text-slate-600 mb-4">Click through the steps to transform a terrible default Google Forms pie chart into a professional visualization.</p>
+                        
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-6 flex flex-col items-center justify-center min-h-[400px] relative">
+                            
+                            {/* Makeover Visuals */}
+                            {step === 0 && (
+                                <div className="text-center fade-in">
+                                    <div className="w-48 h-48 pie-chart mx-auto shadow-md mb-4"></div>
+                                    <p className="text-sm text-slate-500 italic">Too many slices, hard to compare sizes, awful colors.</p>
+                                </div>
+                            )}
+
+                            {step > 0 && (
+                                <div className="w-full max-w-lg fade-in relative pt-10">
+                                    {/* Title */}
+                                    {step >= 4 ? (
+                                        <h3 className="absolute top-0 left-0 font-bold text-slate-800 text-lg">Favorite Free Time Activities</h3>
+                                    ) : null}
+
+                                    {/* Y Axis/Grid */}
+                                    <div className="relative h-64 border-l-2 border-b-2 border-slate-800 flex items-end justify-between px-4 pb-0">
+                                        {/* Gridlines */}
+                                        {step < 3 && (
+                                            <div className="absolute inset-0 flex flex-col justify-between pt-10 pointer-events-none">
+                                                <div className="w-full border-b border-slate-300"></div>
+                                                <div className="w-full border-b border-slate-300"></div>
+                                                <div className="w-full border-b border-slate-300"></div>
+                                                <div className="w-full border-b border-slate-300"></div>
+                                            </div>
+                                        )}
+
+                                        {/* Bars */}
+                                        {[
+                                            { id: 'Gaming', val: 45, color: '#f87171' },
+                                            { id: 'Reading', val: 15, color: '#60a5fa' },
+                                            { id: 'Sports', val: 30, color: '#fbbf24' },
+                                            { id: 'Music', val: 10, color: '#34d399' }
+                                        ]
+                                        .sort((a, b) => step >= 2 ? b.val - a.val : 0) // Sort applied at step 2
+                                        .map((bar, i) => (
+                                            <div key={bar.id} className="flex flex-col items-center w-16 relative group transition-all duration-500 z-10" style={{ height: `${bar.val * 2}%` }}>
+                                                {/* Data Label */}
+                                                {step >= 5 && <span className="absolute -top-6 text-sm font-bold text-slate-600">{bar.val}%</span>}
+                                                {/* The Bar */}
+                                                <div 
+                                                    className="w-full h-full rounded-t-sm transition-colors duration-500"
+                                                    style={{ backgroundColor: step >= 6 ? (bar.id === 'Gaming' ? '#4f46e5' : '#cbd5e1') : bar.color }}
+                                                ></div>
+                                                {/* X Axis Label */}
+                                                <span className="absolute -bottom-8 text-sm text-slate-600">{bar.id}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 justify-center">
+                            {steps.map((s, i) => {
+                                const isDisabled = i > step + 1;
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => setStep(i)}
+                                        disabled={isDisabled}
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${step === i ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-600'} ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-200'}`}
+                                    >
+                                        {s}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        {step === 6 && <p className="text-center text-green-600 font-bold mt-6 fade-in"><IconCheck/> Perfect! Clean, readable, and the color highlights the key insight.</p>}
+                    </Card>
+                </div>
+            );
+        };
+
+        // --- PAGE 4: RELATIONAL ANALYSIS ---
+        const Page4 = () => {
+            const [matches, setMatches] = useState({});
+            
+            const handleMatch = (qId, type) => {
+                setMatches(prev => ({ ...prev, [qId]: type }));
+            };
+
+            const questions = [
+                { id: 'q1', text: "Do JC students prefer coffee over tea compared to Secondary School students?", correct: "Grouped Bar", explanation: "This compares 'Grade Level' (Categorical) with 'Beverage Preference' (Categorical)." },
+                { id: 'q2', text: "What is the difference in average commute time between students who are chauffeured, walk, or take the bus?", correct: "Bar Chart", explanation: "This compares 'Transportation Method' (Categorical) with 'Commute Time' (Numerical)." },
+                { id: 'q3', text: "Does the number of absences from class predict a student's final UAS?", correct: "Scatterplot", explanation: "This compares 'Number of Absences' (Numerical) with 'UAS' (Numerical)." }
+            ];
+
+            const chartTypes = ["Grouped Bar", "Bar Chart", "Scatterplot"];
+
+            return (
+                <div className="space-y-8 fade-in w-full max-w-4xl mx-auto">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">4. Relational Analysis</h1>
+                        <p className="text-slate-600 text-lg">Comparing variables to find patterns.</p>
+                    </div>
+
+                    <Card className="bg-indigo-50 border-indigo-100">
+                        <h2 className="text-xl font-bold text-indigo-900 mb-3">What is Relational Analysis?</h2>
+                        <p className="text-indigo-800 mb-4">Relational analysis involves looking at the relationship between two or more variables to find patterns, correlations, or differences. Instead of just summarizing a single variable, we compare them to uncover deeper insights. Here are examples of research questions:</p>
+                        <ul className="list-disc pl-5 text-indigo-800 space-y-2">
+                            <li><strong>Categorical vs. Categorical:</strong> "Does a student's grade level (categorical) affect their favorite subject (categorical)?"</li>
+                            <li><strong>Categorical vs. Numerical:</strong> "Do students involved in extracurricular sports (categorical) get more or less sleep (numerical) than those who aren't?"</li>
+                            <li><strong>Numerical vs. Numerical:</strong> "Is there a relationship between the number of hours spent studying (numerical) and final exam scores (numerical)?"</li>
+                        </ul>
+                    </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">The Matrix</h2>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-100">
+                                        <th className="p-3 border-b-2 border-slate-200">Comparison</th>
+                                        <th className="p-3 border-b-2 border-slate-200">Tool</th>
+                                        <th className="p-3 border-b-2 border-slate-200">Chart Type</th>
+                                        <th className="p-3 border-b-2 border-slate-200 text-center">Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td className="p-3 border-b border-slate-100 font-medium text-blue-700">Categorical vs. Categorical</td>
+                                        <td className="p-3 border-b border-slate-100">Pivot Table</td>
+                                        <td className="p-3 border-b border-slate-100">Grouped or Stacked Bar Chart</td>
+                                        <td className="p-3 border-b border-slate-100 text-center">
+                                            <svg width="60" height="40" viewBox="0 0 60 40" className="inline-block">
+                                                <path d="M5 5 L5 35 L55 35" stroke="currentColor" strokeWidth="2" fill="none" className="text-slate-400" />
+                                                <rect x="10" y="15" width="8" height="20" className="fill-blue-500" />
+                                                <rect x="18" y="22" width="8" height="13" className="fill-indigo-300" />
+                                                <rect x="34" y="10" width="8" height="25" className="fill-blue-500" />
+                                                <rect x="42" y="18" width="8" height="17" className="fill-indigo-300" />
+                                            </svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="p-3 border-b border-slate-100 font-medium text-purple-700">Categorical vs. Numerical</td>
+                                        <td className="p-3 border-b border-slate-100">Pivot Table (Aggregating averages)</td>
+                                        <td className="p-3 border-b border-slate-100">Bar Chart</td>
+                                        <td className="p-3 border-b border-slate-100 text-center">
+                                            <svg width="60" height="40" viewBox="0 0 60 40" className="inline-block">
+                                                <path d="M5 5 L5 35 L55 35" stroke="currentColor" strokeWidth="2" fill="none" className="text-slate-400" />
+                                                <rect x="12" y="10" width="8" height="25" className="fill-purple-500" />
+                                                <rect x="27" y="20" width="8" height="15" className="fill-purple-500" />
+                                                <rect x="42" y="15" width="8" height="20" className="fill-purple-500" />
+                                            </svg>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td className="p-3 border-b border-slate-100 font-medium text-orange-700">Numerical vs. Numerical</td>
+                                        <td className="p-3 border-b border-slate-100">Raw Data</td>
+                                        <td className="p-3 border-b border-slate-100">Scatterplot (with Trendline)</td>
+                                        <td className="p-3 border-b border-slate-100 text-center">
+                                            <svg width="60" height="40" viewBox="0 0 60 40" className="inline-block">
+                                                <path d="M5 5 L5 35 L55 35" stroke="currentColor" strokeWidth="2" fill="none" className="text-slate-400" />
+                                                <circle cx="15" cy="30" r="2.5" className="fill-orange-500" />
+                                                <circle cx="25" cy="22" r="2.5" className="fill-orange-500" />
+                                                <circle cx="35" cy="25" r="2.5" className="fill-orange-500" />
+                                                <circle cx="45" cy="12" r="2.5" className="fill-orange-500" />
+                                                <circle cx="50" cy="8" r="2.5" className="fill-orange-500" />
+                                                <path d="M10 32 L52 5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 2" className="text-orange-800" />
+                                            </svg>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Activity: Match the Question to the Chart</h2>
+                        <p className="text-slate-600 mb-6">Select the correct chart type to visualize each research question.</p>
+                        
+                        <div className="space-y-6">
+                            {questions.map(q => {
+                                const isCorrect = matches[q.id] === q.correct;
+                                const isAnswered = !!matches[q.id];
+                                return (
+                                    <div key={q.id} className={`p-4 rounded-xl border ${isAnswered ? (isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200') : 'bg-slate-50 border-slate-200'}`}>
+                                        <p className="font-semibold text-slate-800 mb-3">{q.text}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {chartTypes.map(ct => (
+                                                <button
+                                                    key={ct}
+                                                    onClick={() => handleMatch(q.id, ct)}
+                                                    className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${matches[q.id] === ct ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-300 hover:bg-slate-100'}`}
+                                                >
+                                                    {ct}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {isAnswered && (
+                                            <p className={`mt-3 text-sm font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                                                {isCorrect ? <><IconCheck/> Correct! {q.explanation}</> : <><IconAlert/> Try again. Consider the underlying variable types (Categorical vs. Numerical).</>}
+                                            </p>
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Scatterplots & Trendlines</h2>
+                        <p className="text-slate-600 mb-4">For Numerical vs Numerical data, skip the pivot table. Highlight raw columns to generate a scatterplot, then add a trendline to show directionality.</p>
+                        <div className="flex justify-center bg-black rounded-xl overflow-hidden aspect-[9/16] max-h-[500px]">
+                            <iframe src="https://www.youtube.com/embed/Ji_UfBlNZz4" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        // --- PAGE 5: ETHICS ---
+        const Page5 = () => {
+            const [axisFixed, setAxisFixed] = useState(false);
+            const [corrAnswer, setCorrAnswer] = useState(null);
+
+            return (
+                <div className="space-y-8 fade-in w-full max-w-4xl mx-auto">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">5. Data Ethics</h1>
+                        <p className="text-slate-600 text-lg">"There are three kinds of lies: lies, damned lies, and statistics". It is important that you are aware of how people may misinterpret/misrepresent data to make a point, and to not do so yourself.</p>
+                    </div>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Activity: The effects of truncating an axis.</h2>
+                        <p className="text-slate-600 mb-4">Look at the chart showing test score improvements. It looks like Group B crushed Group A... until you fix the axis.</p>
+                        
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-4 flex justify-center h-64 relative">
+                            {/* Chart Area */}
+                            <div className="relative h-48 w-48 border-l-2 border-b-2 border-slate-800 flex items-end justify-around pb-0">
+                                <span className="absolute -left-8 -top-3 text-xs text-slate-500">{axisFixed ? '100' : '90'}</span>
+                                <span className="absolute -left-6 bottom-0 text-xs text-slate-500">{axisFixed ? '0' : '85'}</span>
+                                
+                                {/* Group A Bar */}
+                                <div className="flex flex-col items-center w-12 relative group" style={{ height: axisFixed ? '86%' : '20%' }}>
+                                    <div className="w-full h-full bg-slate-400 rounded-t-sm transition-all duration-700"></div>
+                                    <span className="absolute -bottom-6 text-sm font-medium">Grp A</span>
+                                </div>
+                                {/* Group B Bar */}
+                                <div className="flex flex-col items-center w-12 relative group" style={{ height: axisFixed ? '89%' : '80%' }}>
+                                    <div className="w-full h-full bg-indigo-500 rounded-t-sm transition-all duration-700"></div>
+                                    <span className="absolute -bottom-6 text-sm font-medium">Grp B</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between bg-indigo-50 p-4 rounded-lg">
+                            <div>
+                                <p className="font-bold text-indigo-900">Truncated Y-Axis</p>
+                                <p className="text-sm text-indigo-700">Starting the axis at 85 exaggerates a tiny 3% difference.</p>
+                            </div>
+                            <Button onClick={() => setAxisFixed(!axisFixed)}>
+                                {axisFixed ? "Break Axis (Start at 85)" : "Fix Axis (Start at 0)"}
+                            </Button>
+                        </div>
+                    </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">Activity: Misinterpreting correlations (intentionally or not).</h2>
+                        <p className="text-slate-600 mb-4 font-medium text-lg">Ice cream sales and shark attacks both increase during the summer. Can we infer that eating ice cream attract sharks?</p>
+                        <div className="space-y-3">
+                            <button onClick={() => setCorrAnswer('yes')} className={`w-full text-left p-3 rounded-lg border ${corrAnswer === 'yes' ? 'bg-red-100 border-red-400' : 'bg-white hover:bg-slate-50'}`}>Yes, the data shows they move together.</button>
+                            <button onClick={() => setCorrAnswer('no')} className={`w-full text-left p-3 rounded-lg border ${corrAnswer === 'no' ? 'bg-green-100 border-green-400' : 'bg-white hover:bg-slate-50'}`}>No. Correlation does not imply causation.</button>
+                        </div>
+                        {corrAnswer === 'no' && (
+                            <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-lg fade-in">
+                                <IconCheck/> Correct! This is a <strong>Spurious Correlation</strong>. A third hidden variable (hot summer weather) causes both people to buy ice cream AND go swimming (where sharks are).
+                            </div>
+                        )}
+                        {corrAnswer === 'yes' && (
+                            <div className="mt-4 p-4 bg-red-50 text-red-800 rounded-lg fade-in">
+                                <IconAlert/> Careful! Just because two things move together doesn't mean one causes the other.
+                            </div>
+                        )}
+                    </Card>
+
+                    <Card>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4">More Ways Statistics Can Lie</h2>
+                        <div className="grid md:grid-cols-3 gap-4">
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <h3 className="font-bold text-slate-800 mb-2">Cherry-Picking</h3>
+                                <p className="text-sm text-slate-600">Highlighting only the data from a specific time period where the trend supports a narrative, while ignoring the overall long-term reality.</p>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <h3 className="font-bold text-slate-800 mb-2">Misleading Percentages</h3>
+                                <p className="text-sm text-slate-600">Claiming a massive "100% increase" in a negative outcome, which sounds terrifying, even if the actual cases only went from 1 to 2.</p>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                <h3 className="font-bold text-slate-800 mb-2">Cumulative Charts</h3>
+                                <p className="text-sm text-slate-600">Plotting <em>total historical</em> sales instead of <em>daily</em> sales to make a failing, stalling product look like it's continuously growing.</p>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        // --- PAGE 6: FINAL TASK ---
+        const Page6 = () => {
+            return (
+                <div className="space-y-8 fade-in w-full max-w-4xl mx-auto">
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-800 mb-2">6. Proof-of-completion: Final Task</h1>
+                        <p className="text-slate-600 text-lg">Apply everything you've learned.</p>
+                    </div>
+
+                    <Card className="bg-gradient-to-br from-indigo-900 to-purple-900 text-white border-none shadow-xl">
+                        <h2 className="text-2xl font-bold mb-2">Capstone: The Data Detective Task</h2>
+                        <p className="text-indigo-100 mb-6">It's time to tie it all together. You've been given a fictional messy dataset of 1000++ responses to a survey on exercise and attitudes. You will need to do some data cleaning and analysis to complete the Google Form quiz to complete this module.</p>
+                        
+                        <div className="space-y-4 mb-8">
+                            <div className="flex gap-4 items-start">
+                                <div className="bg-white/20 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">1</div>
+                                <p><strong>Data set:</strong> Open the spreadsheet and make a copy that you can edit.</p>
+                            </div>
+                            <div className="flex gap-4 items-start">
+                                <div className="bg-white/20 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">2</div>
+                                <p><strong>Task:</strong> Open the Google Form Quiz and complete the tasks. Submission of the quiz is the proof of your completion of this module.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <a href="https://docs.google.com/spreadsheets/d/110W2Pl7pPhtGcelS2bLH2ldE5pHoot0lEFsNGKE-I2g/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="flex-1 text-center bg-white text-indigo-900 font-bold py-3 px-6 rounded-xl hover:bg-indigo-50 transition-colors shadow-lg">
+                                Open Dataset
+                            </a>
+                            <a href="https://docs.google.com/forms/d/e/1FAIpQLSf_eoCT1Str_WgrW3CP2FCdsQQ_AoRJQhjMOrTtum7pxkAECw/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" className="flex-1 text-center bg-indigo-500 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-400 transition-colors shadow-lg border border-indigo-400">
+                                Open Google Form Quiz
+                            </a>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        // --- MAIN APP ---
+        const App = () => {
+            const [activeTab, setActiveTab] = useState(0);
+
+            const tabs = [
+                { id: 0, title: "1. Data Cleaning" },
+                { id: 1, title: "2. Basic Analysis" },
+                { id: 2, title: "3. Visualisation" },
+                { id: 3, title: "4. Relational Analysis" },
+                { id: 4, title: "5. Data Ethics" },
+                { id: 5, title: "6. Proof-of-completion" },
+            ];
+
+            return (
+                <div className="min-h-screen flex flex-col md:flex-row">
+                    {/* Sidebar / Top Nav */}
+                    <nav className="bg-slate-900 text-white md:w-64 flex-shrink-0 md:h-screen md:sticky top-0 p-4 overflow-y-auto">
+                        <div className="mb-8 hidden md:block">
+                            <h2 className="text-xl font-bold text-indigo-400">Data Skills</h2>
+                            <p className="text-slate-400 text-sm mt-1">Self-Paced Module</p>
+                        </div>
+                        <div className="flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                            {tabs.map((tab, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setActiveTab(i)}
+                                    className={`text-left px-4 py-3 rounded-lg font-medium transition-colors whitespace-nowrap md:whitespace-normal ${activeTab === i ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                                >
+                                    {tab.title}
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+
+                    {/* Main Content Area */}
+                    <main className="flex-1 p-4 md:p-10 pb-24 overflow-y-auto w-full">
+                        {activeTab === 0 && <Page1 />}
+                        {activeTab === 1 && <Page2 />}
+                        {activeTab === 2 && <Page3 />}
+                        {activeTab === 3 && <Page4 />}
+                        {activeTab === 4 && <Page5 />}
+                        {activeTab === 5 && <Page6 />}
+
+                        {/* Navigation Footer */}
+                        <div className="mt-12 flex justify-between items-center max-w-4xl mx-auto border-t border-slate-200 pt-6">
+                            <Button 
+                                variant="outline" 
+                                disabled={activeTab === 0} 
+                                onClick={() => { setActiveTab(Math.max(0, activeTab - 1)); window.scrollTo(0,0); }}
+                            >
+                                &larr; Previous
+                            </Button>
+                            
+                            <span className="text-slate-400 text-sm font-medium">Page {activeTab + 1} of 6</span>
+
+                            <Button 
+                                disabled={activeTab === 5} 
+                                onClick={() => { setActiveTab(Math.min(5, activeTab + 1)); window.scrollTo(0,0); }}
+                            >
+                                Next Step &rarr;
+                            </Button>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
